@@ -1,0 +1,26 @@
+{
+  "name": "openai-tts-cli",
+  "version": "1.0.0",
+  "description": "CLI tool to convert text to speech using OpenAI API",
+  "main": "text-to-speech.js",
+  "bin": {
+    "openai-tts": "./text-to-speech.js"
+  },
+  "scripts": {
+    "start": "node text-to-speech.js"
+  },
+  "keywords": [
+    "openai",
+    "text-to-speech",
+    "cli",
+    "tts"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^11.1.0",
+    "dotenv": "^16.3.1",
+    "openai": "^4.20.0",
+    "pdf-parse": "^1.1.1"
+  }
+}
