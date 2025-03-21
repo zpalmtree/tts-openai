@@ -19,6 +19,8 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+const MAX_INPUT_LENGTH = 2000;
+
 // Define CLI options
 program
   .name('text-to-speech')
@@ -26,8 +28,8 @@ program
   .version('1.0.0')
   .option('-f, --file <path>', 'Input file path (txt, pdf)')
   .option('-o, --output <path>', 'Output audio file path (default: output.mp3)')
-  .option('-v, --voice <name>', 'Voice to use (default from .env or "nova")')
-  .option('-m, --model <name>', 'Model to use (default from .env or "tts-1-hd")')
+  .option('-v, --voice <name>', 'Voice to use (default from .env or "alloy")')
+  .option('-m, --model <name>', 'Model to use (default from .env or "gpt-4o-mini-tts")')
   .option('-r, --response-format <format>', 'Audio format (mp3, opus, aac, flac, wav, pcm)', 'mp3')
   .option('-s, --speed <factor>', 'Speed factor (0.25 to 4.0)', parseFloat, 1)
   .option('--no-ffmpeg', 'Disable ffmpeg for merging audio chunks')
@@ -38,10 +40,11 @@ const options = program.opts();
 // Default values with fallbacks
 const outputPath = options.output || 'output.mp3';
 const voice = options.voice || process.env.DEFAULT_VOICE || 'nova';
-const model = options.model || process.env.DEFAULT_MODEL || 'tts-1-hd';
+const model = options.model || process.env.DEFAULT_MODEL || 'gpt-4o-mini-tts';
 const responseFormat = options.responseFormat || 'mp3';
 const speed = options.speed;
 const useFFmpeg = options.ffmpeg !== false;
+const instructions = `Speak a little slower than normal, with an engaging voice, as if you were talking to a class of fifth graders`;
 
 // Available voices for validation
 const availableVoices = ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer', 'coral', 'ash', 'sage'];
@@ -158,7 +161,7 @@ async function handleOCR(filePath) {
           ],
         },
       ],
-      max_tokens: 4096,
+      max_tokens: MAX_INPUT_LENGTH,
     });
     
     return response.choices[0].message.content;
@@ -169,7 +172,7 @@ async function handleOCR(filePath) {
 }
 
 // Function to split text into chunks of at most 4096 characters at natural boundaries
-function splitTextIntoChunks(text, maxLength = 4096) {
+function splitTextIntoChunks(text, maxLength = MAX_INPUT_LENGTH) {
   const chunks = [];
   
   // First, try splitting by paragraphs
@@ -281,6 +284,7 @@ async function textToSpeech(text) {
         voice: voice,
         input: chunks[0],
         response_format: responseFormat
+        instructions,
       };
       
       if (speed !== 1.0) {
@@ -310,6 +314,7 @@ async function textToSpeech(text) {
           voice: voice,
           input: chunks[i],
           response_format: responseFormat
+          instructions,
         };
         
         if (speed !== 1.0) {
